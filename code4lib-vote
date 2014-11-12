@@ -8,6 +8,7 @@ require 'json'
 require 'date'
 require 'libnotify'
 require 'slop'
+require 'fileutils'
 
 opts = Slop.parse do
   banner <<EOF
@@ -28,7 +29,7 @@ if opts[:help]
 end
 
 http = HTTPClient.new
-response = http.get 'http://vote.code4lib.org/election/results/33.json'
+response = http.get "http://vote.code4lib.org/election/results/#{opts[:vote]}.json"
 results = JSON.parse(response.body)
 
 ordered_results = results.sort_by{|talk| talk['score']}.reverse
@@ -48,7 +49,7 @@ end
 
 top_talks = talks_list.slice(0,opts[:top])
 
-message = '<a href="http://vote.code4lib.org/election/results/33">Code4Lib Vote</a>'
+message = %Q|<a href="http://vote.code4lib.org/election/results/#{opts[:vote]}">Code4Lib Vote</a>|
 message << "\nRANK: #{rank}\nscore: #{score}\nhigh score: #{ordered_results.first['score']}\n\n"
 
 top_ten = top_talks.slice(0,10)
@@ -62,7 +63,10 @@ puts message
 # Change this to whatever desktop notification system you use
 Libnotify.show(:body => message, :timeout => opts[:timeout], icon_path: opts[:icon])
 
-File.open('/home/jnronall/tmp/code4lib-vote.log', 'a') do |fh|
+logfile = File.expand_path('~/tmp/code4lib-vote.log')
+FileUtils.mkdir_p logfile unless File.exist? logfile
+
+File.open(logfile, 'a') do |fh|
   fh.puts DateTime.now.to_s
   fh.puts message
   fh.puts "\n----------------\n"
