@@ -58,30 +58,35 @@ ordered_results.each_with_index do |talk, index|
   if talk['id'] == opts[:mytalk]
     rank = index + 1
     score = talk['score']
-    title = "<b>#{title}</b>"
+    if platform == 'linux'
+      title = "<b>#{title}</b>"
+    end
   end
   talks_list << "#{talk['score']} #{title}"
 end
 
 top_talks = talks_list.slice(0,opts[:top])
 
-message = %Q|<a href="http://vote.code4lib.org/election/results/#{opts[:vote]}">Code4Lib Vote</a>|
-message << "\nRANK: #{rank}\nscore: #{score}\nhigh score: #{ordered_results.first['score']}\n\n"
+
+main_message = "\nRANK: #{rank}\nscore: #{score}\nhigh score: #{ordered_results.first['score']}\n\n"
 
 top_ten = top_talks.slice(0,10)
 top_rest = top_talks.slice(10,top_talks.length)
-message << top_ten.join("\n\n")
-message << "\n\n--------------\n\n"
-message << top_rest.join("\n\n")
-
-puts message
+main_message << top_ten.join("\n\n")
+main_message << "\n\n--------------\n\n"
+main_message << top_rest.join("\n\n")
 
 case platform
 when 'linux'
+  message_link = %Q|<a href="http://vote.code4lib.org/election/results/#{opts[:vote]}">Code4Lib Vote</a>|
+  message = message_link + main_message
   Libnotify.show(:body => message, :timeout => opts[:timeout], icon_path: opts[:icon])
 when 'mac'
+  message = main_message
   `terminal-notifier -message "#{message}" -appIcon #{opts[:icon]} -title "Code4Lib Vote" -url "http://vote.code4lib.org/election/results/#{opts[:vote]}"`
 end
+
+puts message
 
 logfile = File.expand_path('~/tmp/code4lib-vote.log')
 logpath = File.expand_path('~/tmp/')
