@@ -5,10 +5,26 @@
 
 require 'httpclient'
 require 'json'
-require 'date'
-require 'libnotify'
 require 'slop'
+
+require 'date'
 require 'fileutils'
+
+begin
+  case RUBY_PLATFORM
+  when /darwin/
+    require 'terminal-notifier'
+    platform = 'mac'
+  when /linux/
+    require 'libnotify'
+    platform = 'linux'
+  # when /win32/
+  #   require 'YKK'
+  end
+rescue LoadError
+  puts "You must have the proper gems installed.\nLinux: libnotify\nMac: terminal-notifier"
+  exit
+end
 
 opts = Slop.parse do
   banner <<EOF
@@ -60,8 +76,12 @@ message << top_rest.join("\n\n")
 
 puts message
 
-# Change this to whatever desktop notification system you use
-Libnotify.show(:body => message, :timeout => opts[:timeout], icon_path: opts[:icon])
+case platform
+when 'linux'
+  Libnotify.show(:body => message, :timeout => opts[:timeout], icon_path: opts[:icon])
+when 'mac'
+  `terminal-notifier -message "#{message}" -appIcon #{opts[:icon]} -title "Code4Lib Vote" -url "http://vote.code4lib.org/election/results/#{opts[:vote]}"`
+end
 
 logfile = File.expand_path('~/tmp/code4lib-vote.log')
 FileUtils.mkdir_p logfile unless File.exist? logfile
