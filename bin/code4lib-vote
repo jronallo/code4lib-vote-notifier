@@ -73,8 +73,10 @@ main_message = "\nRANK: #{rank}\nscore: #{score}\nhigh score: #{ordered_results.
 top_ten = top_talks.slice(0,10)
 top_rest = top_talks.slice(10,top_talks.length)
 main_message << top_ten.join("\n\n")
-main_message << "\n\n--------------\n\n"
-main_message << top_rest.join("\n\n")
+if top_rest
+  main_message << "\n\n--------------\n\n"
+  main_message << top_rest.join("\n\n")
+end
 
 case platform
 when 'linux'
