@@ -84,7 +84,8 @@ when 'mac'
 end
 
 logfile = File.expand_path('~/tmp/code4lib-vote.log')
-FileUtils.mkdir_p logfile unless File.exist? logfile
+logpath = File.expand_path('~/tmp/')
+FileUtils.mkdir_p logpath unless File.exist? logpath
 
 File.open(logfile, 'a') do |fh|
   fh.puts DateTime.now.to_s
