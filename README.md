@@ -15,5 +15,6 @@ Mac: `gem install terminal-notifier`
 
 ## TODO 
 - Trottle notifications to only show them when something has changed or a threshold is passed
+- Get it working on Mac
 
 
