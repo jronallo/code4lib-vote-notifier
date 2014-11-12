@@ -1,0 +1,70 @@
+#!/usr/bin/env ruby
+
+# To add this to cron do something like this to use the ruby wrapper script:
+# */15 8-17 * * 1-5 env DISPLAY=:0.0 /home/jnronall/.rvm/wrappers/ruby-2.1.1/ruby /home/jnronall/bin/code4lib-vote > $HOME/tmp/code4lib-vote-cron.log 2>&1
+
+require 'httpclient'
+require 'json'
+require 'date'
+require 'libnotify'
+require 'slop'
+
+opts = Slop.parse do
+  banner <<EOF
+Usage: code4lib-vote --vote 33 --mytalk 655 --top 20 --timeout 60 --icon /home/jnronall/bin/images/ballot-box.png
+EOF
+
+  on 'vote=', 'Number identifying vote', as: Integer, default: 33
+  on 'mytalk=', 'Number identifying your talk', as: Integer, default: 655
+  on 'top=', 'Number of results to show in notification', as: Integer, default: 20
+  on 'timeout=', 'Number of seconds to show the desktop notification for', as: Integer, default: 60
+  on 'icon=', 'Path to the icon to show in the notification area', as: String, default: '/home/jnronall/bin/images/ballot-box.png'
+  on 'h', 'help', 'Show this help message'
+end
+
+if opts[:help]
+  puts opts
+  exit
+end
+
+http = HTTPClient.new
+response = http.get 'http://vote.code4lib.org/election/results/33.json'
+results = JSON.parse(response.body)
+
+ordered_results = results.sort_by{|talk| talk['score']}.reverse
+
+rank = nil
+score = nil
+talks_list = []
+ordered_results.each_with_index do |talk, index|
+  title = talk['title'].slice(0,30)
+  if talk['id'] == opts[:mytalk]
+    rank = index + 1
+    score = talk['score']
+    title = "<b>#{title}</b>"
+  end
+  talks_list << "#{talk['score']} #{title}"
+end
+
+top_talks = talks_list.slice(0,opts[:top])
+
+message = '<a href="http://vote.code4lib.org/election/results/33">Code4Lib Vote</a>'
+message << "\nRANK: #{rank}\nscore: #{score}\nhigh score: #{ordered_results.first['score']}\n\n"
+
+top_ten = top_talks.slice(0,10)
+top_rest = top_talks.slice(10,top_talks.length)
+message << top_ten.join("\n\n")
+message << "\n\n--------------\n\n"
+message << top_rest.join("\n\n")
+
+puts message
+
+# Change this to whatever desktop notification system you use
+Libnotify.show(:body => message, :timeout => opts[:timeout], icon_path: opts[:icon])
+
+File.open('/home/jnronall/tmp/code4lib-vote.log', 'a') do |fh|
+  fh.puts DateTime.now.to_s
+  fh.puts message
+  fh.puts "\n----------------\n"
+end
+
