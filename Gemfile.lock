@@ -1,0 +1,23 @@
+PATH
+  remote: .
+  specs:
+    code4lib-vote-notifier (0.0.1)
+      httpclient
+      json
+      slop
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    httpclient (2.5.3.2)
+    json (1.8.1)
+    rake (10.3.2)
+    slop (3.6.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bundler (~> 1.6)
+  code4lib-vote-notifier!
+  rake (~> 10.0)
